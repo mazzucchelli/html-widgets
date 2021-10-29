@@ -2,11 +2,19 @@
   "name": "sharpjs",
   "version": "0.1.0",
   "description": "",
-  "main": "index.js",
+  "main": "lib/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "tsc",
+    "dev": "tsc -w"
   },
   "keywords": [],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "shortid": "^2.2.16"
+  },
+  "devDependencies": {
+    "tiny-typed-emitter": "^2.1.0",
+    "typescript": "^4.4.4"
+  }
 }
