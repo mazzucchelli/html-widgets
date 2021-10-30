@@ -316,7 +316,7 @@ class DomObserver {
 export const ComponentDispatcher = new DomObserver({
   rootElement: document.body,
   componentSelector: "[data-sharp]",
-  logs: LOGS || false,
+  logs: true,
 });
 
 // export const getComponentInstance = (CID) => {
