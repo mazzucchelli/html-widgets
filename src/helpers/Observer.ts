@@ -1,4 +1,5 @@
 import { WidgetInstance, HWidget } from "./WidgetInstance";
+import Configs from "./configs";
 
 const RH_MEMORY = new Map();
 
@@ -28,8 +29,8 @@ export class Observer {
   constructor({
     components,
     asyncComponents,
-    rootElement = `[data-r-root]`,
-    selector = `[data-r]`,
+    rootElement = Configs.rootElement,
+    selector = `[${Configs.widgetSelector.datasetHtmlAttribute}]`,
     logs = false,
   }: ObserverConstructor) {
     this.shouldLog = logs;
@@ -53,23 +54,24 @@ export class Observer {
     // const removed = removedNodes.querySelectorAll(this.selector);
 
     removedNodes
-      .filter((el) => el.dataset.rId)
+      .filter((el) => el.dataset[Configs.widgetId.datasetKey])
       .forEach((comp) => {
-        const { rId, r } = comp.dataset;
+        const widgetId = comp.dataset[Configs.widgetId.datasetKey];
+        const widgetName = comp.dataset[Configs.widgetSelector.datasetKey];
 
-        if (RH_MEMORY.has(rId)) {
-          const instance = RH_MEMORY.get(rId);
+        if (RH_MEMORY.has(widgetId)) {
+          const instance = RH_MEMORY.get(widgetId);
 
           if (this.shouldLog) {
             console.log(
-              `%c[${r} # ${rId}] destroyed`,
+              `%c[${widgetName} # ${widgetId}] destroyed`,
               "color: white; background-color: #9c27b0; padding: 3px 5px;"
             );
             console.log(comp);
           }
 
           instance.destroy();
-          RH_MEMORY.delete(rId);
+          RH_MEMORY.delete(widgetId);
         }
       });
   }
@@ -113,7 +115,11 @@ export class Observer {
       target !== this.rootElement ? target.parentNode : this.rootElement;
     return Array.from(
       finalTarget.querySelectorAll(this.selector) as NodeListOf<HTMLElement>
-    ).filter((el) => !!el.dataset.r && !el.dataset.rId);
+    ).filter(
+      (el) =>
+        !!el.dataset[Configs.widgetSelector.datasetKey] &&
+        !el.dataset[Configs.widgetId.datasetKey]
+    );
   }
 
   importComponents(target: HTMLElement) {
@@ -122,7 +128,8 @@ export class Observer {
         const components = this.findComponents(target);
 
         components.forEach(async (component) => {
-          const componentName = component.dataset.r;
+          const componentName =
+            component.dataset[Configs.widgetSelector.datasetKey];
 
           // if component is typeof string is considered a path to lazy import
           const shouldImport =
@@ -131,13 +138,13 @@ export class Observer {
           let instance: HWidget<unknown> = null;
 
           if (shouldImport) {
-            const asyncRh = await import(
+            const asyncWidgetHandler = await import(
               `~/${this.asyncComponents[componentName]}`
             );
-            instance = new WidgetInstance(component, asyncRh.default);
+            instance = new WidgetInstance(component, asyncWidgetHandler.default);
           } else {
-            const rh = this.components[componentName];
-            instance = new WidgetInstance(component, rh);
+            const widgetHandler = this.components[componentName];
+            instance = new WidgetInstance(component, widgetHandler);
           }
 
           // store component reference
@@ -163,7 +170,7 @@ export class Observer {
       await this.importComponents(this.rootElement);
       await this.observeDomChanges(this.rootElement);
     } catch (e) {
-      console.error("RH-ERR", e);
+      console.error("WIDGETS-ERR", e);
     }
   }
 }

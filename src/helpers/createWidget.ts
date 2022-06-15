@@ -1,3 +1,5 @@
+import Configs from "./configs";
+
 interface createWidgetParams {
   name?: string;
   className?: string;
@@ -6,7 +8,7 @@ interface createWidgetParams {
   props?: { [x: string]: string };
 }
 
-export default ({
+export const createWidget = ({
   name,
   template,
   tag,
@@ -15,7 +17,7 @@ export default ({
 }: createWidgetParams) => {
   const rootTag = document.createElement(tag || "div");
 
-  if (name) rootTag.dataset.r = name;
+  if (name) rootTag.dataset[Configs.widgetSelector.datasetKey] = name;
 
   if (className) {
     rootTag.classList.add(className);
