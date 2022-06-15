@@ -1,4 +1,4 @@
-import { WidgetInstance, Widget } from "./WidgetInstance";
+import { WidgetInstance } from "./WidgetInstance";
 import Configs from "./configs";
 
 const RH_MEMORY = new Map();
@@ -12,6 +12,7 @@ type AsyncComponentObj = {
 };
 
 interface ObserverConstructor {
+  helpers: (el: HTMLElement) => { [x: string]: (...args: any[]) => unknown };
   components?: ComponentObj;
   asyncComponents?: AsyncComponentObj;
   rootElement?: string;
@@ -23,16 +24,21 @@ export class Observer {
   private readonly components: ComponentObj;
   private readonly asyncComponents: AsyncComponentObj;
   private readonly rootElement: HTMLElement;
+  private readonly helpers: (el: HTMLElement) => {
+    [x: string]: (...args: any[]) => unknown;
+  };
   private selector: string;
   private readonly shouldLog: boolean;
 
   constructor({
+    helpers,
     components,
     asyncComponents,
     rootElement = Configs.rootElement,
     selector = `[${Configs.widgetSelector.datasetHtmlAttribute}]`,
     logs = false,
   }: ObserverConstructor) {
+    this.helpers = helpers;
     this.shouldLog = logs;
     this.rootElement = document.body.querySelector(rootElement);
     this.selector = selector;
@@ -133,7 +139,10 @@ export class Observer {
           const shouldImport =
             this.ASYNC_COMPONENT_LIST.includes(componentName);
 
-          let instance: Widget<unknown> = null;
+          let instance: WidgetInstance<
+            unknown,
+            ReturnType<typeof this.helpers>
+          > = null;
 
           if (shouldImport) {
             const asyncWidgetHandler = await import(
@@ -141,11 +150,16 @@ export class Observer {
             );
             instance = new WidgetInstance(
               component,
-              asyncWidgetHandler.default
+              asyncWidgetHandler.default,
+              this.helpers
             );
           } else {
             const widgetHandler = this.components[componentName];
-            instance = new WidgetInstance(component, widgetHandler);
+            instance = new WidgetInstance(
+              component,
+              widgetHandler,
+              this.helpers
+            );
           }
 
           // store component reference

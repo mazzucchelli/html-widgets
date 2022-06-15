@@ -1,5 +1,5 @@
-import { Observer } from "./helpers/Observer";
+import { Observer } from "./Observer";
 
-export { createWidget } from "./helpers/createWidget";
-export { Widget } from "./helpers/WidgetInstance";
+export { createWidget } from "./utils";
+export { WidgetFunction } from "./WidgetInstance";
 export default Observer;
