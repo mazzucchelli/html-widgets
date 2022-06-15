@@ -12,8 +12,8 @@ type AsyncComponentObj = {
 };
 
 interface ObserverConstructor {
-  components: ComponentObj;
-  asyncComponents: AsyncComponentObj;
+  components?: ComponentObj;
+  asyncComponents?: AsyncComponentObj;
   rootElement?: string;
   selector?: string;
   logs?: boolean;
@@ -52,7 +52,7 @@ export class Observer {
 
   afterNodeDeleted(removedNodes: HTMLElement[]) {
     removedNodes
-      .filter((el) => el.dataset[Configs.widgetId.datasetKey])
+      .filter((el) => el.dataset && el.dataset[Configs.widgetId.datasetKey])
       .forEach((comp) => {
         const widgetId = comp.dataset[Configs.widgetId.datasetKey];
         const widgetName = comp.dataset[Configs.widgetSelector.datasetKey];
@@ -139,7 +139,10 @@ export class Observer {
             const asyncWidgetHandler = await import(
               `~/${this.asyncComponents[componentName]}`
             );
-            instance = new WidgetInstance(component, asyncWidgetHandler.default);
+            instance = new WidgetInstance(
+              component,
+              asyncWidgetHandler.default
+            );
           } else {
             const widgetHandler = this.components[componentName];
             instance = new WidgetInstance(component, widgetHandler);

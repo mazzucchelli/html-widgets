@@ -91,7 +91,7 @@ export class WidgetInstance<Props> {
     const obj = {} as any;
 
     Object.values(
-      document.querySelector('[data-widget="PropsInspector"]').attributes
+      this.$htmlEl.attributes
     )
       .filter((el) => el.name.startsWith(Configs.htmlProps.prefix))
       .forEach((el) => {
