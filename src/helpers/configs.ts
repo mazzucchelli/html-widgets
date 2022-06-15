@@ -9,4 +9,7 @@ export default {
     datasetHtmlAttribute: "data-widget-id", // for querySelector('[data-widget-id]')
     datasetKey: "widgetId", // for dataset.widgetId
   },
+  htmlProps: {
+    prefix: ":",
+  },
 };

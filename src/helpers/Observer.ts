@@ -51,8 +51,6 @@ export class Observer {
   }
 
   afterNodeDeleted(removedNodes: HTMLElement[]) {
-    // const removed = removedNodes.querySelectorAll(this.selector);
-
     removedNodes
       .filter((el) => el.dataset[Configs.widgetId.datasetKey])
       .forEach((comp) => {

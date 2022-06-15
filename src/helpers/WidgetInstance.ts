@@ -2,7 +2,9 @@ import { nanoid } from "nanoid";
 import { ObservableMembrane } from "observable-membrane";
 import { ProxyPropertyKey } from "observable-membrane/dist/shared";
 
-import { convertType, snakeToCamel } from "./utils";
+import Configs from "./configs";
+
+import { convertType } from "./utils";
 
 export type HWidget<Props> = WidgetInstance<Props>;
 
@@ -15,12 +17,12 @@ export class WidgetInstance<Props> {
   public props: Props;
 
   constructor(htmlEl: HTMLElement, handler: any) {
-    this.id = `rh_${nanoid(6)}`;
+    this.id = `${Configs.idPrefix}${nanoid(6)}`;
     this.$htmlEl = htmlEl;
     this.propsMap = {};
     this.props = {} as Props;
 
-    htmlEl.setAttribute("data-r-id", this.id);
+    htmlEl.setAttribute(Configs.widgetId.datasetHtmlAttribute, this.id);
 
     this.collectProps();
 
@@ -86,32 +88,16 @@ export class WidgetInstance<Props> {
   };
 
   collectProps = () => {
-    // temp props object
     const obj = {} as any;
 
-    // cycle dataset and only handle interesting attributes
-    for (const [key, value] of Object.entries(this.$htmlEl.dataset)) {
-      if (key.startsWith("r") && key !== "r" && !key.startsWith("rId")) {
-        // adjust prop name: r-prop-name -> propName
-        const [firstLetter, ...restOfWord] = key.substring(1);
-        const cleanKey = snakeToCamel(
-          firstLetter.toLowerCase() + restOfWord
-        );
+    Object.values(
+      document.querySelector('[data-widget="PropsInspector"]').attributes
+    )
+      .filter((el) => el.name.startsWith(Configs.htmlProps.prefix))
+      .forEach((el) => {
+        obj[el.name.substring(1)] = convertType(el.value);
+      });
 
-        // save original attribute name
-        this.propsMap[cleanKey] = key;
-
-        // store the converted value in temp props object
-        obj[cleanKey] = convertType(value);
-      }
-    }
-
-    // make props object reactive, so it can auto update the DOM
-    this.props = this.useState(obj, () => {
-      for (const [key, value] of Object.entries(this.props)) {
-        const datasetKey = this.propsMap[key];
-        this.$htmlEl.dataset[datasetKey] = JSON.stringify(value);
-      }
-    });
+    this.props = obj;
   };
 }
