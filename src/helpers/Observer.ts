@@ -1,4 +1,4 @@
-import { WidgetInstance, HWidget } from "./WidgetInstance";
+import { WidgetInstance, Widget } from "./WidgetInstance";
 import Configs from "./configs";
 
 const RH_MEMORY = new Map();
@@ -133,7 +133,7 @@ export class Observer {
           const shouldImport =
             this.ASYNC_COMPONENT_LIST.includes(componentName);
 
-          let instance: HWidget<unknown> = null;
+          let instance: Widget<unknown> = null;
 
           if (shouldImport) {
             const asyncWidgetHandler = await import(

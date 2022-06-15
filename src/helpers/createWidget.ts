@@ -29,7 +29,7 @@ export const createWidget = ({
 
   if (props) {
     for (const [key, value] of Object.entries(props)) {
-      rootTag.dataset[key] = value;
+      rootTag.setAttribute(`${Configs.htmlProps.prefix}${key}`, value);
     }
   }
 
