@@ -1,12 +1,13 @@
 {
   "compilerOptions": {
     "noImplicitAny": true,
+    "downlevelIteration": true,
     "allowSyntheticDefaultImports": true,
     "module": "esNext",
     "target": "es5",
     "allowJs": true,
     "lib": [
-      "es2015",
+      "es2017",
       "dom"
     ],
     "outDir": "./lib/",

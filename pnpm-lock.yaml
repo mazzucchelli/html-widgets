@@ -1,0 +1,40 @@
+lockfileVersion: 5.4
+
+specifiers:
+  nanoid: ^3.1.30
+  observable-membrane: ^2.0.0
+  typescript: ^4.4.4
+  uglify-js: ^3.14.3
+
+dependencies:
+  nanoid: 3.3.4
+  observable-membrane: 2.0.0
+
+devDependencies:
+  typescript: 4.7.3
+  uglify-js: 3.16.0
+
+packages:
+
+  /nanoid/3.3.4:
+    resolution: {integrity: sha512-MqBkQh/OHTS2egovRtLk45wEyNXwF+cokD+1YPf9u5VfJiRdAiRwB2froX5Co9Rh20xs4siNPm8naNotSD6RBw==}
+    engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
+    hasBin: true
+    dev: false
+
+  /observable-membrane/2.0.0:
+    resolution: {integrity: sha512-V4KOKc3vMBjg/G8P4M7GYFZCTXQKxUIaCucWnrgPg/3JJkcKf9DtBmlp7NgogMWuLq4b8f3Q9yivNTztaaPPWA==}
+    engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
+    dev: false
+
+  /typescript/4.7.3:
+    resolution: {integrity: sha512-WOkT3XYvrpXx4vMMqlD+8R8R37fZkjyLGlxavMc4iB8lrl8L0DeTcHbYgw/v0N/z9wAFsgBhcsF0ruoySS22mA==}
+    engines: {node: '>=4.2.0'}
+    hasBin: true
+    dev: true
+
+  /uglify-js/3.16.0:
+    resolution: {integrity: sha512-FEikl6bR30n0T3amyBh3LoiBdqHRy/f4H80+My34HOesOKyHfOsxAPAxOoqC0JUnC1amnO0IwkYC3sko51caSw==}
+    engines: {node: '>=0.8.0'}
+    hasBin: true
+    dev: true

@@ -19,3 +19,7 @@ node_modules/
 
 # macOS
 .DS_Store
+
+.idea
+.vscode
+lib
