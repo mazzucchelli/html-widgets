@@ -49,11 +49,11 @@ export class Observer {
   }
 
   get COMPONENT_LIST() {
-    return Object.keys(this.components);
+    return Object.keys(this.components || {});
   }
 
   get ASYNC_COMPONENT_LIST() {
-    return Object.keys(this.asyncComponents);
+    return Object.keys(this.asyncComponents || {});
   }
 
   afterNodeDeleted(removedNodes: HTMLElement[]) {
