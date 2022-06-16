@@ -80,7 +80,7 @@ new HtmlWidgets({
 ```
 
 ```javascript
-export default (props, { helpers }) => {
+export default (ctx, helpers) => {
   const child = helpers.qs(".js_child");
   console.log(child.innerText); // yo
 };
