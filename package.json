@@ -1,6 +1,6 @@
 {
   "name": "html-widgets",
-  "version": "1.0.4",
+  "version": "1.0.7",
   "description": "",
   "main": "lib/index.min.js",
   "types": "lib/index.d.ts",
@@ -14,7 +14,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "nanoid": "^3.1.30"
+    "nanoid": "^4.0.0"
   },
   "devDependencies": {
     "typescript": "^4.4.4",
