@@ -1,6 +1,6 @@
 {
   "name": "html-widgets",
-  "version": "1.0.7",
+  "version": "1.1.0-beta.0",
   "description": "Automatically call functions (widgets) when DOM loads and changes",
   "main": "dist/html-widgets.cjs.js",
   "module": "dist/html-widgets.esm.js",
