@@ -12,11 +12,13 @@ export type WidgetContext<Props> = {
 
 export type WidgetFunction<T, S> = (
   ctx: WidgetContext<T>,
-  helpers: S
+  plugins: S
 ) => void | (() => void);
 
+type PluginFunction<T, S> = (ctx: WidgetContext<T>) => S;
+
 export class WidgetInstance<Props, S> {
-  private readonly helpers: any;
+  private readonly plugins: PluginFunction<Props, S>;
   private readonly widgetHandlerFunction: WidgetFunction<Props, S>;
   private props: Props;
   readonly $el: HTMLElement;
@@ -27,12 +29,12 @@ export class WidgetInstance<Props, S> {
   constructor(
     htmlEl: HTMLElement,
     handler: WidgetFunction<Props, S>,
-    helpers: any
+    plugins: PluginFunction<Props, S>
   ) {
     this.id = `${Configs.idPrefix}${nanoid(6)}`;
     this.$el = htmlEl;
     this.props = {} as Props;
-    this.helpers = helpers;
+    this.plugins = plugins;
     this.widgetHandlerFunction = handler;
 
     this.init();
@@ -46,8 +48,8 @@ export class WidgetInstance<Props, S> {
     };
   }
 
-  private get HELPERS() {
-    return this.helpers(this.CONTEXT);
+  private get PLUGINS() {
+    return this.plugins(this.CONTEXT);
   }
 
   // add the id as data attribute to the current HTMLElement
@@ -78,7 +80,7 @@ export class WidgetInstance<Props, S> {
     // call widget function
     const widgetHandler = this.widgetHandlerFunction(
       this.CONTEXT,
-      this.HELPERS
+      this.PLUGINS
     );
 
     // if the widget return a function use it as destroyer handler

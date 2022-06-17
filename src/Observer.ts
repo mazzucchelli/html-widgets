@@ -1,4 +1,4 @@
-import { WidgetInstance } from "./WidgetInstance";
+import { WidgetContext, WidgetInstance } from "./WidgetInstance";
 import Configs from "./configs";
 
 const RH_MEMORY = new Map();
@@ -13,7 +13,9 @@ type AsyncComponentObj = {
 
 interface ObserverConstructor {
   lazyImport: (componentName: string) => Promise<any>;
-  helpers: (el: HTMLElement) => { [x: string]: (...args: any[]) => unknown };
+  plugins: (ctx: WidgetContext<unknown>) => {
+    [x: string]: (...args: any[]) => any;
+  };
   widgets?: ComponentObj;
   asyncWidgets?: AsyncComponentObj;
   rootElement?: string;
@@ -25,8 +27,8 @@ export class Observer {
   private readonly widgets: ComponentObj;
   private readonly asyncWidgets: AsyncComponentObj;
   private readonly rootElement: HTMLElement;
-  private readonly helpers: (el: HTMLElement) => {
-    [x: string]: (...args: any[]) => unknown;
+  private readonly plugins: (ctx: WidgetContext<unknown>) => {
+    [x: string]: (...args: any[]) => any;
   };
   private readonly selector: string;
   readonly lazyImport: (componentName: string) => Promise<any>;
@@ -34,14 +36,14 @@ export class Observer {
 
   constructor({
     lazyImport,
-    helpers,
+    plugins,
     widgets,
     asyncWidgets,
     rootElement = Configs.rootElement,
     selector = `[${Configs.widgetSelector.datasetHtmlAttribute}]`,
     logs = false,
   }: ObserverConstructor) {
-    this.helpers = helpers;
+    this.plugins = plugins;
     this.lazyImport = lazyImport;
     this.shouldLog = logs;
     this.rootElement = document.body.querySelector(rootElement);
@@ -54,10 +56,6 @@ export class Observer {
 
   get COMPONENT_LIST() {
     return Object.keys(this.widgets || {});
-  }
-
-  get ASYNC_COMPONENT_LIST() {
-    return Object.keys(this.asyncWidgets || {});
   }
 
   afterNodeDeleted(removedNodes: HTMLElement[]) {
@@ -144,7 +142,7 @@ export class Observer {
 
           let instance: WidgetInstance<
             unknown,
-            ReturnType<typeof this.helpers>
+            ReturnType<typeof this.plugins>
           > = null;
 
           if (shouldImport) {
@@ -152,14 +150,14 @@ export class Observer {
             instance = new WidgetInstance(
               component,
               asyncWidgetHandler.default,
-              this.helpers
+              this.plugins
             );
           } else {
             const widgetHandler = this.widgets[componentName];
             instance = new WidgetInstance(
               component,
               widgetHandler,
-              this.helpers
+              this.plugins
             );
           }
 
