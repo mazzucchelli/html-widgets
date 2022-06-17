@@ -5,8 +5,8 @@ import Configs from "./configs";
 import { convertType } from "./utils";
 
 export type WidgetContext<Props> = {
-  $el: HTMLElement;
   id: string;
+  $el: HTMLElement;
   props: Props;
 };
 
@@ -16,10 +16,13 @@ export type WidgetFunction<T, S> = (
 ) => void | (() => void);
 
 export class WidgetInstance<Props, S> {
-  private readonly $htmlEl: HTMLElement;
-  private readonly destroy: () => void;
-  public readonly id: string;
+  private readonly $el: HTMLElement;
+  private readonly helpers: any;
+  private readonly widgetHandlerFunction: WidgetFunction<Props, S>;
   private props: Props;
+  public readonly id: string;
+  public readonly name: string;
+  public destroy: () => void;
 
   constructor(
     htmlEl: HTMLElement,
@@ -27,34 +30,36 @@ export class WidgetInstance<Props, S> {
     helpers: any
   ) {
     this.id = `${Configs.idPrefix}${nanoid(6)}`;
-    this.$htmlEl = htmlEl;
+    this.$el = htmlEl;
     this.props = {} as Props;
+    this.helpers = helpers;
+    this.widgetHandlerFunction = handler;
 
-    htmlEl.setAttribute(Configs.widgetId.datasetHtmlAttribute, this.id);
-
-    this.collectProps();
-
-    const customHelpers = helpers(htmlEl);
-    const destroyFun = handler(
-      {
-        $el: this.$htmlEl,
-        props: this.props,
-        id: this.id,
-      },
-      customHelpers
-    );
-
-    this.destroy = destroyFun ? destroyFun : () => {};
+    this.init();
   }
 
-  get $el() {
-    return this.$htmlEl;
+  private get CONTEXT(): WidgetContext<Props> {
+    return {
+      id: this.id,
+      $el: this.$el,
+      props: this.props,
+    };
   }
 
-  collectProps = () => {
+  private get HELPERS() {
+    return this.helpers(this.CONTEXT);
+  }
+
+  // add the id as data attribute to the current HTMLElement
+  private setWidgetIdAttribute() {
+    const { $el, id } = this;
+    $el.setAttribute(Configs.widgetId.datasetHtmlAttribute, id);
+  }
+
+  private collectProps = () => {
     const obj = {} as any;
 
-    Object.values(this.$htmlEl.attributes)
+    Object.values(this.$el.attributes)
       .filter((el) => el.name.startsWith(Configs.htmlProps.prefix))
       .forEach((el) => {
         obj[el.name.substring(1)] = convertType(el.value);
@@ -62,4 +67,21 @@ export class WidgetInstance<Props, S> {
 
     this.props = obj;
   };
+
+  private init() {
+    // add the id as data attribute, it will be used to run the destroy method
+    this.setWidgetIdAttribute();
+
+    // collect attributes with `:` prefix
+    this.collectProps();
+
+    // call widget function
+    const widgetHandler = this.widgetHandlerFunction(
+      this.CONTEXT,
+      this.HELPERS
+    );
+
+    // if the widget return a function use it as destroyer handler
+    this.destroy = widgetHandler ? widgetHandler : () => {};
+  }
 }

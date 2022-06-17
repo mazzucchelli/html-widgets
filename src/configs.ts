@@ -1,5 +1,5 @@
 export default {
-  idPrefix: "w_",
+  idPrefix: "w",
   rootElement: "[data-widgets-root]",
   widgetSelector: {
     datasetHtmlAttribute: "data-widget", // for querySelector('[data-widget]')

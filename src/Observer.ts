@@ -13,16 +13,16 @@ type AsyncComponentObj = {
 
 interface ObserverConstructor {
   helpers: (el: HTMLElement) => { [x: string]: (...args: any[]) => unknown };
-  components?: ComponentObj;
-  asyncComponents?: AsyncComponentObj;
+  widgets?: ComponentObj;
+  asyncWidgets?: AsyncComponentObj;
   rootElement?: string;
   selector?: string;
   logs?: boolean;
 }
 
 export class Observer {
-  private readonly components: ComponentObj;
-  private readonly asyncComponents: AsyncComponentObj;
+  private readonly widgets: ComponentObj;
+  private readonly asyncWidgets: AsyncComponentObj;
   private readonly rootElement: HTMLElement;
   private readonly helpers: (el: HTMLElement) => {
     [x: string]: (...args: any[]) => unknown;
@@ -32,8 +32,8 @@ export class Observer {
 
   constructor({
     helpers,
-    components,
-    asyncComponents,
+    widgets,
+    asyncWidgets,
     rootElement = Configs.rootElement,
     selector = `[${Configs.widgetSelector.datasetHtmlAttribute}]`,
     logs = false,
@@ -42,18 +42,18 @@ export class Observer {
     this.shouldLog = logs;
     this.rootElement = document.body.querySelector(rootElement);
     this.selector = selector;
-    this.components = components;
-    this.asyncComponents = asyncComponents;
+    this.widgets = widgets;
+    this.asyncWidgets = asyncWidgets;
 
     this.init();
   }
 
   get COMPONENT_LIST() {
-    return Object.keys(this.components || {});
+    return Object.keys(this.widgets || {});
   }
 
   get ASYNC_COMPONENT_LIST() {
-    return Object.keys(this.asyncComponents || {});
+    return Object.keys(this.asyncWidgets || {});
   }
 
   afterNodeDeleted(removedNodes: HTMLElement[]) {
@@ -84,7 +84,7 @@ export class Observer {
     addedNodes
       .filter((el) => !!el.querySelectorAll)
       .forEach((addedNode) => {
-        this.importComponents(addedNode);
+        this.importWidgets(addedNode);
       });
   }
 
@@ -114,7 +114,7 @@ export class Observer {
     });
   }
 
-  findComponents(target: HTMLElement) {
+  findWidgets(target: HTMLElement) {
     const finalTarget =
       target !== this.rootElement ? target.parentNode : this.rootElement;
     return Array.from(
@@ -126,12 +126,12 @@ export class Observer {
     );
   }
 
-  importComponents(target: HTMLElement) {
+  importWidgets(target: HTMLElement) {
     return new Promise<void>((resolve, reject) => {
       try {
-        const components = this.findComponents(target);
+        const widgets = this.findWidgets(target);
 
-        components.forEach(async (component) => {
+        widgets.forEach(async (component) => {
           const componentName =
             component.dataset[Configs.widgetSelector.datasetKey];
 
@@ -145,16 +145,16 @@ export class Observer {
           > = null;
 
           if (shouldImport) {
-            const asyncWidgetHandler = await import(
-              `~/${this.asyncComponents[componentName]}`
-            );
-            instance = new WidgetInstance(
-              component,
-              asyncWidgetHandler.default,
-              this.helpers
-            );
+            // const asyncWidgetHandler = await import(
+            //   `~/${this.asyncWidgets[componentName]}`
+            // );
+            // instance = new WidgetInstance(
+            //   component,
+            //   asyncWidgetHandler.default,
+            //   this.helpers
+            // );
           } else {
-            const widgetHandler = this.components[componentName];
+            const widgetHandler = this.widgets[componentName];
             instance = new WidgetInstance(
               component,
               widgetHandler,
@@ -170,7 +170,6 @@ export class Observer {
               `%c[${componentName} # ${instance.id}] initiated`,
               "color: white; background-color: #3f51b5; padding: 3px 5px;"
             );
-            console.log(instance.$el);
           }
         });
         resolve();
@@ -182,7 +181,7 @@ export class Observer {
 
   async init() {
     try {
-      await this.importComponents(this.rootElement);
+      await this.importWidgets(this.rootElement);
       await this.observeDomChanges(this.rootElement);
     } catch (e) {
       console.error("WIDGETS-ERR", e);
