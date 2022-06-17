@@ -16,13 +16,13 @@ export type WidgetFunction<T, S> = (
 ) => void | (() => void);
 
 export class WidgetInstance<Props, S> {
-  private readonly $el: HTMLElement;
   private readonly helpers: any;
   private readonly widgetHandlerFunction: WidgetFunction<Props, S>;
   private props: Props;
-  public readonly id: string;
-  public readonly name: string;
-  public destroy: () => void;
+  readonly $el: HTMLElement;
+  readonly id: string;
+  readonly name: string;
+  destroy: () => void;
 
   constructor(
     htmlEl: HTMLElement,

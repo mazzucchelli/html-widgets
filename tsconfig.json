@@ -3,6 +3,7 @@
     "noImplicitAny": true,
     "downlevelIteration": true,
     "allowSyntheticDefaultImports": true,
+    "isolatedModules": true,
     "module": "esNext",
     "target": "es5",
     "allowJs": true,

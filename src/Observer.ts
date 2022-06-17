@@ -12,6 +12,7 @@ type AsyncComponentObj = {
 };
 
 interface ObserverConstructor {
+  lazyImport: (componentName: string) => Promise<any>;
   helpers: (el: HTMLElement) => { [x: string]: (...args: any[]) => unknown };
   widgets?: ComponentObj;
   asyncWidgets?: AsyncComponentObj;
@@ -27,10 +28,12 @@ export class Observer {
   private readonly helpers: (el: HTMLElement) => {
     [x: string]: (...args: any[]) => unknown;
   };
-  private selector: string;
-  private readonly shouldLog: boolean;
+  private readonly selector: string;
+  readonly lazyImport: (componentName: string) => Promise<any>;
+  readonly shouldLog: boolean;
 
   constructor({
+    lazyImport,
     helpers,
     widgets,
     asyncWidgets,
@@ -39,6 +42,7 @@ export class Observer {
     logs = false,
   }: ObserverConstructor) {
     this.helpers = helpers;
+    this.lazyImport = lazyImport;
     this.shouldLog = logs;
     this.rootElement = document.body.querySelector(rootElement);
     this.selector = selector;
@@ -136,8 +140,7 @@ export class Observer {
             component.dataset[Configs.widgetSelector.datasetKey];
 
           // if component is typeof string is considered a path to lazy import
-          const shouldImport =
-            this.ASYNC_COMPONENT_LIST.includes(componentName);
+          const shouldImport = !this.COMPONENT_LIST.includes(componentName);
 
           let instance: WidgetInstance<
             unknown,
@@ -145,14 +148,12 @@ export class Observer {
           > = null;
 
           if (shouldImport) {
-            // const asyncWidgetHandler = await import(
-            //   `~/${this.asyncWidgets[componentName]}`
-            // );
-            // instance = new WidgetInstance(
-            //   component,
-            //   asyncWidgetHandler.default,
-            //   this.helpers
-            // );
+            const asyncWidgetHandler = await this.lazyImport(componentName);
+            instance = new WidgetInstance(
+              component,
+              asyncWidgetHandler.default,
+              this.helpers
+            );
           } else {
             const widgetHandler = this.widgets[componentName];
             instance = new WidgetInstance(
@@ -167,9 +168,10 @@ export class Observer {
 
           if (this.shouldLog) {
             console.log(
-              `%c[${componentName} # ${instance.id}] initiated`,
+              `%c${shouldImport ? "⚡️ " : ""}[${componentName}] initiated`,
               "color: white; background-color: #3f51b5; padding: 3px 5px;"
             );
+            console.log(instance.$el);
           }
         });
         resolve();

@@ -23,4 +23,6 @@ node_modules/
 
 .idea
 .vscode
+dist
 lib
+demo-build
