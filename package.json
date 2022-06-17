@@ -1,7 +1,7 @@
 {
   "name": "html-widgets",
   "version": "1.0.7",
-  "description": "",
+  "description": "Automatically call functions (widgets) when DOM loads and changes",
   "main": "lib/index.min.js",
   "types": "lib/index.d.ts",
   "scripts": {
@@ -10,14 +10,22 @@
     "deploy": "pnpm build && npm publish",
     "dev": "tsc -w"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "nanoid": "^4.0.0"
+  "homepage": "https://github.com/mazzucchelli/html-widgets",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mazzucchelli/html-widgets.git"
   },
+  "keywords": [],
+  "author": "Matteo Mazzucchelli <mazzucchelli.wrk@gmail.com> (https://github.com/mazzucchelli)",
+  "license": "ISC",
   "devDependencies": {
     "typescript": "^4.4.4",
     "uglify-js": "^3.14.3"
-  }
+  },
+  "dependencies": {
+    "nanoid": "^4.0.0"
+  },
+  "bundleDependencies": [
+    "nanoid"
+  ]
 }
