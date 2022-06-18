@@ -1,4 +1,4 @@
-import { WidgetInstance } from "./WidgetInstance";
+import { WidgetContext, WidgetInstance } from "./WidgetInstance";
 import Configs from "./configs";
 
 const RH_MEMORY = new Map();
@@ -12,48 +12,50 @@ type AsyncComponentObj = {
 };
 
 interface ObserverConstructor {
-  helpers: (el: HTMLElement) => { [x: string]: (...args: any[]) => unknown };
-  components?: ComponentObj;
-  asyncComponents?: AsyncComponentObj;
+  lazyImport: (componentName: string) => Promise<any>;
+  plugins: (ctx: WidgetContext<unknown>) => {
+    [x: string]: (...args: any[]) => any;
+  };
+  widgets?: ComponentObj;
+  asyncWidgets?: AsyncComponentObj;
   rootElement?: string;
   selector?: string;
   logs?: boolean;
 }
 
 export class Observer {
-  private readonly components: ComponentObj;
-  private readonly asyncComponents: AsyncComponentObj;
+  private readonly widgets: ComponentObj;
+  private readonly asyncWidgets: AsyncComponentObj;
   private readonly rootElement: HTMLElement;
-  private readonly helpers: (el: HTMLElement) => {
-    [x: string]: (...args: any[]) => unknown;
+  private readonly plugins: (ctx: WidgetContext<unknown>) => {
+    [x: string]: (...args: any[]) => any;
   };
-  private selector: string;
-  private readonly shouldLog: boolean;
+  private readonly selector: string;
+  readonly lazyImport: (componentName: string) => Promise<any>;
+  readonly shouldLog: boolean;
 
   constructor({
-    helpers,
-    components,
-    asyncComponents,
+    lazyImport,
+    plugins,
+    widgets,
+    asyncWidgets,
     rootElement = Configs.rootElement,
     selector = `[${Configs.widgetSelector.datasetHtmlAttribute}]`,
     logs = false,
   }: ObserverConstructor) {
-    this.helpers = helpers;
+    this.plugins = plugins;
+    this.lazyImport = lazyImport;
     this.shouldLog = logs;
     this.rootElement = document.body.querySelector(rootElement);
     this.selector = selector;
-    this.components = components;
-    this.asyncComponents = asyncComponents;
+    this.widgets = widgets;
+    this.asyncWidgets = asyncWidgets;
 
     this.init();
   }
 
   get COMPONENT_LIST() {
-    return Object.keys(this.components || {});
-  }
-
-  get ASYNC_COMPONENT_LIST() {
-    return Object.keys(this.asyncComponents || {});
+    return Object.keys(this.widgets || {});
   }
 
   afterNodeDeleted(removedNodes: HTMLElement[]) {
@@ -84,7 +86,7 @@ export class Observer {
     addedNodes
       .filter((el) => !!el.querySelectorAll)
       .forEach((addedNode) => {
-        this.importComponents(addedNode);
+        this.importWidgets(addedNode);
       });
   }
 
@@ -114,7 +116,7 @@ export class Observer {
     });
   }
 
-  findComponents(target: HTMLElement) {
+  findWidgets(target: HTMLElement) {
     const finalTarget =
       target !== this.rootElement ? target.parentNode : this.rootElement;
     return Array.from(
@@ -126,39 +128,36 @@ export class Observer {
     );
   }
 
-  importComponents(target: HTMLElement) {
+  importWidgets(target: HTMLElement) {
     return new Promise<void>((resolve, reject) => {
       try {
-        const components = this.findComponents(target);
+        const widgets = this.findWidgets(target);
 
-        components.forEach(async (component) => {
+        widgets.forEach(async (component) => {
           const componentName =
             component.dataset[Configs.widgetSelector.datasetKey];
 
           // if component is typeof string is considered a path to lazy import
-          const shouldImport =
-            this.ASYNC_COMPONENT_LIST.includes(componentName);
+          const shouldImport = !this.COMPONENT_LIST.includes(componentName);
 
           let instance: WidgetInstance<
             unknown,
-            ReturnType<typeof this.helpers>
+            ReturnType<typeof this.plugins>
           > = null;
 
           if (shouldImport) {
-            const asyncWidgetHandler = await import(
-              `~/${this.asyncComponents[componentName]}`
-            );
+            const asyncWidgetHandler = await this.lazyImport(componentName);
             instance = new WidgetInstance(
               component,
               asyncWidgetHandler.default,
-              this.helpers
+              this.plugins
             );
           } else {
-            const widgetHandler = this.components[componentName];
+            const widgetHandler = this.widgets[componentName];
             instance = new WidgetInstance(
               component,
               widgetHandler,
-              this.helpers
+              this.plugins
             );
           }
 
@@ -167,7 +166,7 @@ export class Observer {
 
           if (this.shouldLog) {
             console.log(
-              `%c[${componentName} # ${instance.id}] initiated`,
+              `%c${shouldImport ? "⚡️ " : ""}[${componentName}] initiated`,
               "color: white; background-color: #3f51b5; padding: 3px 5px;"
             );
             console.log(instance.$el);
@@ -182,7 +181,7 @@ export class Observer {
 
   async init() {
     try {
-      await this.importComponents(this.rootElement);
+      await this.importWidgets(this.rootElement);
       await this.observeDomChanges(this.rootElement);
     } catch (e) {
       console.error("WIDGETS-ERR", e);

@@ -1,14 +1,13 @@
 {
   "name": "html-widgets",
-  "version": "1.0.7",
+  "version": "1.1.0-beta.1",
   "description": "Automatically call functions (widgets) when DOM loads and changes",
-  "main": "lib/index.min.js",
-  "types": "lib/index.d.ts",
+  "main": "dist/html-widgets.cjs.js",
+  "module": "dist/html-widgets.esm.js",
+  "types": "dist/html-widgets.cjs.d.ts",
   "scripts": {
-    "minify": "uglifyjs --compress --mangle --output lib/index.min.js -- lib/index.js",
-    "build": "tsc --declaration && npm run minify",
-    "deploy": "pnpm build && npm publish",
-    "dev": "tsc -w"
+    "build": "preconstruct build",
+    "publish": "pnpm build && npm publish"
   },
   "homepage": "https://github.com/mazzucchelli/html-widgets",
   "repository": {
@@ -19,8 +18,10 @@
   "author": "Matteo Mazzucchelli <mazzucchelli.wrk@gmail.com> (https://github.com/mazzucchelli)",
   "license": "ISC",
   "devDependencies": {
-    "typescript": "^4.4.4",
-    "uglify-js": "^3.14.3"
+    "@babel/core": "^7.18.5",
+    "@babel/preset-typescript": "^7.17.12",
+    "@preconstruct/cli": "^2.1.5",
+    "typescript": "^4.4.4"
   },
   "dependencies": {
     "nanoid": "^4.0.0"

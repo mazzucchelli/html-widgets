@@ -3,6 +3,7 @@
     "noImplicitAny": true,
     "downlevelIteration": true,
     "allowSyntheticDefaultImports": true,
+    "isolatedModules": true,
     "module": "esNext",
     "target": "es5",
     "allowJs": true,
@@ -10,6 +11,7 @@
       "es2017",
       "dom"
     ],
+    "declaration": true,
     "outDir": "./lib/",
     "moduleResolution": "node",
   },
