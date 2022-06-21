@@ -1,6 +1,7 @@
 import Configs from "./configs";
 
-export const convertType = (value: any) => {
+export const convertType = (v: any) => {
+  const value = v.trim();
   if (
     (value.startsWith("{") && value.endsWith("}")) ||
     (value.startsWith("[") && value.endsWith("]"))
