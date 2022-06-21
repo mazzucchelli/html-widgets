@@ -140,9 +140,11 @@ export class Observer {
           // if component is typeof string is considered a path to lazy import
           const shouldImport = !this.COMPONENT_LIST.includes(componentName);
 
+          const p = this.plugins;
+
           let instance: WidgetInstance<
             unknown,
-            ReturnType<typeof this.plugins>
+            ReturnType<typeof p>
           > = null;
 
           if (shouldImport) {
