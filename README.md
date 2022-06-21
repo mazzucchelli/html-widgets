@@ -1,110 +1,96 @@
-# HTML Widgets
+Tiny UI framework, _typescript friendly_, for server rendered websites.
 
-Automatically call funcitons (widgets) when DOM loads and changes.
+Designed to be easy to use and learn. Thinked for anyone who wants a similar approach to other modern frameworks but can't use them for whatever reason.
 
-## Quick overview
+### **Goal**:
 
-```html
-<div data-widgets-root>
-  <!-- ... -->
-  <div data-widget="MyWidget" :msg="Hello World!"></div>
-  <!-- ... -->
-</div>
-```
+- **Watch** the DOM and **search** `[data-widget]` elements
+- **Lazy load** the chunk (_or just run a function_) you define for it
+- Run a **destroy** function **when** the element in **removed** from the DOM
 
-```javascript
-// components/MyWidget.js
+---
 
-export default ({ $el, props }) => {
-  $el.innerHTML = props.msg;
-};
-```
+## Table of contents
 
-## Setup
+- [Quick overview](#quick-overview)
+- [Init options](#init-options)
+- [Context](#context)
+  - [props](#props)
+  - [propsEffect](#prop-effect)
+- [Plugins](#plugins)
+- [Use with typescript](#typescript)
+
+---
+
+## <h2 id="quick-overview">Quick overview</h2>
+
+Install
 
 ```
 yarn add html-widgets
 ```
 
-```javascript
-import HtmlWidgets from "html-widgets";
-import MyWidget from "./components/MyWidget";
-
-new HtmlWidgets({
-  components: { MyWidget },
-});
-```
-
-## `Props`
-
-`:props` allow you to consume data declared in the HTML, it's basically a `getAttribute` with fancy things around
+Define the widget
 
 ```html
-<div
-  data-widget="MyWidget"
-  :string="lorem ipsum"
-  :number="123"
-  :object="{'a':1,'b':'second','c':[1,2,3],'d':{'a':'a','b':2}}"
-  :array="[1,2,3]"
-></div>
+<div data-widget="MyWidget">...</div>
 ```
+
+Write the `WidgetFunction`
 
 ```javascript
-// components/MyWidget.js
-
-export default ({ props }) => {
-  console.log(typeof props.string); // String
-  console.log(typeof props.number); // Number
-  console.log(typeof props.object); // Object
-  console.log(typeof props.array); // Array
-};
-```
-
-## `Helpers`
-
-Let you define custom functionalities for your widgets
-
-```javascript
-new HtmlWidgets({
-  // ...
-  helpers: ($widget) => {
-    qs: (target) => $widget.querySelector(name);
-  },
-});
-```
-
-```html
-<div data-widget="MyWidget">
-  <div class="js_child">yo</div>
-</div>
-```
-
-```javascript
-export default (ctx, helpers) => {
-  const child = helpers.qs(".js_child");
-  console.log(child.innerText); // yo
-};
-```
-
-## `Destroy`
-
-Usefull to remove listeners, a widget can return a void function, that will be called once the related HTML is removed from the DOM
-
-```javascript
-export default (props, { helpers }) => {
-  // init logic
+export default (context, plugins) => {
+  console.log("MyWidget found in the DOM");
 
   () => {
-    // destroy logic
+    console.log("MyWidget removed from the DOM");
   };
 };
 ```
 
-## Async import
-
-Add this to your webpack file
+Init the observer and register the widgets
 
 ```javascript
+import HtmlWidgets from "html-widgets";
+import MyWidget from "./widgets/MyWidget";
+
+new HtmlWidgets({
+  widgets: { MyWidget },
+});
+```
+
+---
+
+## <h2 id="init-options">Init options</h2>
+
+```typescript
+{
+  // root html element to watch, default [data-widgets-root]
+  rootElement?: string;
+
+  // log when a Widget is initiated or destroyed
+  logs?: boolean;
+
+  // object of imported WidgetFunctions, not lazy loaded
+  widgets?: { [x: string] : WidgetFunction };
+
+  // lazy load method, like:
+  // async (widget) => await import(`~/${widget}`)
+  lazyImport: (componentName: string) => Promise<WidgetFunction>
+
+  // helper functions that have access to same context of a WidgetFunction
+  // accessible as second argument of a WidgetFunction
+  plugins: (context: WidgetContext<unknown>) => {
+    [x: string]: (...args: any[]) => any;
+  };
+}
+```
+
+in order to use `lazyImport` remember to update your webpack config:
+
+```javascript
+// lazyImport: async (widget) => await import(`~/${widget}`)
+
 resolve: {
     extensions: [".ts", ".js"],
     alias: {
@@ -113,43 +99,108 @@ resolve: {
 },
 ```
 
-Then init the library using the `asyncComponents` option, this will import the widget file only if requested by the DOM
+---
+
+## <h2 id="context">Context</h2>
+
+First argument of a `WidgetFunction`, it contains:
+
+- `$el` | HTMLElement that called the function
+- `name` | the name found in `[data-widget]`
+- `props` | found and converted attributes when initiated
+- `propEffect` | a function that is called every time a specific attribute (only props) changes
+
+### <h3 id="props">props</h3>
+
+```html
+<div
+  data-widget="MyWidget"
+  :some-string="lorem ipsum"
+  :some-number="123"
+  :some-object="{ 'foo': 'bar' }"
+  :some-array="[1, 2, 3]"
+></div>
+```
 
 ```javascript
-import HtmlWidgets from "html-widgets";
+export default ({ props }) => {
+  console.log(typeof props["some-string"]); // String
+  console.log(typeof props["some-number"]); // Number
+  console.log(typeof props["some-object"]); // Object
+  console.log(typeof props["some-array"]); // Array
+};
+```
 
+### <h3 id="prop-effect">propEffect()</h3>
+
+```javascript
+export default ({ propEffect }) => {
+  const [name, setName] = propEffect("name", () => {
+    console.log(":name attribute just changed, new value:", name.current);
+  });
+
+  // name.current -> updated and converted attribute value
+  // setName(v) -> update method, also working with $el.setAttribute(`:${name}`, v)
+};
+```
+
+---
+
+## <h2 id="plugins">Plugins</h2>
+
+It's possible to register custom functionalities for your widgets using the plugins option. Functions declared here are accessible through the second argument of your widget function and have access to the same context of a WidgetFunction
+
+Very simple example:
+
+```javascript
 new HtmlWidgets({
-  asyncComponents: { MyWidget: "MyWidget.js" },
+  // ...
+  plugins: (context) => {
+    qs: (target) => context.$el.querySelector(target);
+  },
 });
 ```
 
-## Use with `Typescript`
+```html
+<div data-widget="MyWidget">
+  <div class="js_child">foo</div>
+</div>
+```
+
+```javascript
+export default (context, { qs }) => {
+  const child = qs(".js_child");
+  console.log(child.innerText); // foo
+};
+```
+
+---
+
+## <h2 id="typescript">Use with `Typescript`</h2>
 
 ```typescript
 import HtmlWidgets, {
-  WidgetFunction as BaseWidgetFunction,
+  WidgetFunction as BaseWidgetFunction, WidgetContext
 } from "html-widgets";
 
-const helpers = ($htmlEl: HTMLElement) => ({
+const plugins = (context: WidgetContext<any>) => ({
   qs: <T extends HTMLElement>(name: string): T => {
-    return $htmlEl.querySelector(name) as T;
+    return context.$el.querySelector(name) as T;
   },
 });
 
-type WidgetFunction<T> = BaseWidgetFunction<T, ReturnType<typeof helpers>>;
+type WidgetFunction<T> = BaseWidgetFunction<T, ReturnType<typeof plugins>>;
 
 interface Props {
   msg: string;
 }
 
-const components = {
-    MyWidget: WidgetFunction<Props> = (ctx, helpers) => {
-        console.log(ctx, helpers);
-    }
+const MyWidget: WidgetFunction<Props> = (context, plugins) => {
+    console.log(context, plugins);
 }
 
 new HtmlWidgets({
-  components,
-  helpers,
+  widgets: { MyWidget }
+  plugins,
 });
 ```
